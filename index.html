@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" type="text/css" href="index.css">
+</head>
+
+<body>
+
+<div id="demo" style="position:fixed;right:0;top:0;margin:10px;border-style:solid;padding:10px;border-color:red">
+<h3 style="color:red">Visualization of New Testament metaphors</h3>
+<p>Made by <a href="https://www.uu.nl/staff/JZwarts/0" target="_blank">Joost Zwarts</a><br>in collaboration with the <a href="https://dig.hum.uu.nl/" target="_blank">Digital Humanities Lab</a><br>
+   Utrecht University, the Netherlands</p>
+<p>The circle shows semantic domains in the New Testament.<br>
+   Hover over a domain to see how it is related to other domains.<br>
+   Click on a domain to see the metaphors themselves.</p>
+<p>This visualization is based on information from<br>
+   the <a href="http://www.laparola.net/greco/louwnida.php" target="_blank">Louw-Nida lexicon</a> of the Greek New Testament.<br>
+   Example: the lexicon gives γυμνός, with the senses<br>
+   (a) 'naked' (domain 49 Clothing and Adorning)<br>
+   (b) 'easily known' (domain 28 Knowledge).<br>
+   This gives rise to the metaphor EASILY KNOWN IS NAKED,<br>
+   mapping from domain 49 to domain 28.<br>  
+   To understand more about how this is done see these <a href="https://sites.google.com/site/jzwartslinguistics/MetFest18_slides.pdf?attredirects=0" target="_blank">slides</a>.</p>
+<p>It uses <a href="https://bl.ocks.org/mbostock/7607999" target="_blank">D3 Hierarchical Edge Bundling by Mike Bostock</a>.</p>
+<p>Unfortunately, it does not seem to work in Internet Explorer,<br>but it does in Chrome, Edge, Firefox and Safari.</p>
+</div>
+
+<div style="position:fixed;left:0;bottom:0;margin:10px">
+Refresh the page (&#8635;) to return to the first page.
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.4/lodash.min.js"></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="lexicon.nodes.new.json"></script>
+<script src="lexicon.links.new.json"></script>
+<script type="text/javascript" src="data-processing.js"></script>
+<script type="text/javascript" src="rendering.js"></script>
+
+<script>
+// initial view
+macroView();
+
+function macroView() {
+  /**
+  * sets initial view, or restores it when user returns
+  */
+  zoomedIn = false;
+  treeDepth = 2;
+  d3.select(".resetButton").attr("style", "display:none");
+  d3.select(".legend1").html('These are the 93 semantic top domains.');
+  d3.select(".legend5").html('<b>Click</b> on a domain to zoom in on its subdomains and mappings.')
+  
+  popup.attr("style", "display:none");
+  pruneTree(tree, treeDepth);
+  // backup positions for transition purposes (clustering will change positions)
+  previousPositions(tree.leaves());
+  tree.sort(function(node1, node2) {return d3.ascending(node1.data.children[0].name, node2.data.children[0].name)});
+  cluster(tree);
+  // do this after filtering and sorting
+  linkedNodes = constructLinks(tree.leaves(),linkList,'name');
+  visibleLeaves = tree.leaves();
+  renderChart();
+}
+
+function mesoView(clickedNode) {
+  /**
+  * sets view of nodes connected to the one that was clicked on in macro view
+  */
+
+  zoomedIn = true;
+  treeDepth = 3;
+  let anchorPoint = JSON.parse(JSON.stringify(clickedNode.x));
+
+  d3.select(".resetButton").attr("style", "display:inline");
+  d3.select(".legend1").html('These are the subdomains of domain <b>'+ clickedNode.data.children[0].name.substr(0,2) + ' ' + clickedNode.data.name + '</b> and related subdomains.');
+  d3.select(".legend5").html('<b>Click</b> on a domain to see the lexical items with their mappings.')
+  // go down one level in the hierarchy
+  pruneTree(tree, treeDepth);
+  // backup positions for transition purposes (clustering will change positions)
+  previousPositions(tree.leaves());
+  cluster(tree);
+  // filter data: only domains connected to the element that was clicked on
+  mesoLinks = filterData(clickedNode, tree, linkList, treeDepth);
+  
+BGLinks.version = "SBLGNT";
+BGLinks.linkVerses();
+
+  id = clickedNode.data.children[0].children[0].macro
+  idnr = clickedNode.data.children[0].children[0].id.slice(0,2) 
+  text = ""
+  var lijst = new Array();
+  var i;
+  for (i = 0; i < mesoLinks.length; i++) {  
+  brondomein = mesoLinks[i].source.name
+  brongrieks = mesoLinks[i].source.greek;
+  bronvertaling = mesoLinks[i].source.translation;
+  doelvertaling = mesoLinks[i].target.translation;
+  doelid = mesoLinks[i].target.id.slice(0,2) + " ";
+  doeldomein = mesoLinks[i].target.name
+  metafoor = doelvertaling.toUpperCase() + " IS " + bronvertaling.toUpperCase();
+  vers = mesoLinks[i].target.verse
+  samen = "";
+  // if (brondomein == id) { text += doelid + doeldomein + " " + metafoor + "(" + brongrieks}}
+  if (brondomein == id) { samen = doelid.fontcolor("red") + doeldomein.fontcolor("red") + ": " + metafoor + " (" + brongrieks + ")<br>"}
+  text += samen 
+  lijst.push(samen) }
+  // if (brondomein == id) { samen = doelid + doeldomein + " " + metafoor + " " + brongrieks)}
+  // lijst.push(samen)}
+  // gesorteerdelijst = lijst.sort()
+  // document.write(gesorteerdelijst)
+  // var blokje = "<h2>"+ idnr + ": " + id + "</h2>" + "<p>"+text+"</p>"
+  var blokje = "<h4>From "+ idnr.fontcolor("red") + " " + id.fontcolor("red") + " to ...</h4>" + "<h5>"+lijst.sort().join("")+"</h5>"
+  document.getElementById("demo").innerHTML = blokje;
+  // document.write("<blockquote>"+"<h1>"+ idnr + ": " + id + "</h1>" + "<br>" + "<h2>"+text+"<h2>"+"</blockquote>");
+  // document.write("<div id="tabel">" + id + "<br>" + text + "</div>")
+  // document.getElementById("tabel").innerHTML = id + "<br>" + text
+
+  // linkedNodes = constructLinks(tree.leaves(), mesoLinks, 'id')
+  // visibleLeaves = filterLeaves(tree.leaves(), treeDepth);
+  // visibleLeaves = recalculatePositions(visibleLeaves, clickedNode, anchorPoint);
+  // renderChart();
+  
+  }
+
+// function microView(clickedNode) {
+//  /**
+//  * show table of metaphor source / target domains of the clicked node
+//  */
+//  let id = clickedNode.data.name
+//  let titleOfTable = id + " " + clickedNode.data.children[0].meso
+//  showNodeConnections(mesoLinks, id, titleOfTable);
+//  popup.attr("style", "display:inline");
+// }
+
+
+
+</script>
+<script src="https://www.biblegateway.com/public/link-to-us/tooltips/bglinks.js" type="text/javascript"></script>
+<script type="text/javascript">
+BGLinks.version = "SBLGNT";
+BGLinks.linkVerses();
+</script>
+
+</body>

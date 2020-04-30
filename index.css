@@ -1,0 +1,114 @@
+div.fixed {
+  position:fixed;
+  top:200px;
+  left:1000px;
+  z-index:200; /* make sure the table is on top*/
+  padding: 3px;
+  margin-left: 10px;
+  margin-top: 5px;
+  width: 350px;
+  border: 1px solid black;
+  background-color: white;
+  color: black;
+  font-size: 14px;
+}
+
+.svg {
+  position: absolute;
+  margin-top: 20px;
+}
+
+.node {
+  font: 300 16px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  fill: #bbb;
+}
+
+.node--clickedDomain {
+  fill: #000;
+}
+
+.node:hover {
+  fill: #000;
+}
+
+.link {
+  stroke: #bbb;
+  stroke-opacity: 0.4;
+  fill: none;
+  pointer-events: none;
+}
+
+.node:hover,
+.node--target {
+  font-weight: 700;
+  font-size: 102%;
+}
+
+.node--target {
+  fill: red;
+  font-weight: 700;
+}
+
+.link--source {
+  stroke-opacity: 1;
+  stroke-width: 2px;
+}
+
+.link--source {
+  stroke: red;
+}
+
+body { font: "Helvetica Neue", Helvetica, Arial, sans-serif;}
+
+td, th {
+  padding: 1px 4px;
+}
+
+.tableTitle {
+  position: relative;
+  left: 70px;
+  font-size: 18px;
+  font-weight: bold;
+
+}
+
+.popup {
+  position:fixed;
+  display:none;
+  top:200px;
+  left:1000px;
+  z-index:200; /* make sure the table is on top*/
+  padding: 3px;
+  margin-left: 10px;
+  margin-top: 5px;
+  width: 350px;
+  border: 1px solid black;
+  background-color: white;
+  color: black;
+  font-size: 12px;
+}
+
+.closePopup { 
+  font-family:FontAwesome;
+  color:gray;
+  font-size:20px;
+  position:relative;
+}
+
+.legend {
+  font-size:15px;
+  position:relative;
+  border: 1px solid black;
+  width: 100%;
+  overflow:hidden;
+}
+
+.legend1, .legend2, .legend3, .legend4, .legend5 {
+  margin-left: 5px;
+}
+
+button {
+ position:relative;
+ left:30%;
+ display:none;
+}
